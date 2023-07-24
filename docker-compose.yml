@@ -54,14 +54,24 @@ services:
     networks:
       - default
       - birdcage_net
-
-  birdcage_frontend:
-    # image: "mmcc73/birdcage_frontend:latest"
+  birdcage_ui:
     build:
       context: birdcage-ui
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
+    volumes:
+     -  "/app/node_modules"
+     - "./birdcage-ui:/app"
+    networks:
+      - birdcage_net
+  birdcage_frontend:
+    # image: "mmcc73/birdcage_frontend:latest"
+    build:
+      context: birdcage_frontend
+      dockerfile: Dockerfile
+    ports:
+      - "7008:7008"
     environment:
       API_SERVER_URL: http://10.0.100.226:7007
       WEBUI_PORT: 7008
@@ -71,8 +81,8 @@ services:
       #TITLE_TEXT: Your Title Here
       #Include the above variables if you want to put some text, and optionally a link, in the nav bar
     volumes:
-      - "./birdcage-ui:/app"
-      - "/app/node_modules"
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
     networks:
       - birdcage_net
 
