@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import StreamsView from "../views/Streams.vue"
+import StreamsListView from '../views/StreamsList.vue'
 import RecentDetectionsView from "../views/RecentDetections.vue"
 
 const router = createRouter({
@@ -8,7 +8,7 @@ const router = createRouter({
     {
       path: '/streams',
       name: 'streams',
-      component: StreamsView
+      component: StreamsListView
     },
     {
       path: '/recent-detections',
