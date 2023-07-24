@@ -1,12 +1,12 @@
 from app.utils.db import BaseModel
-from peewee import IntegerField, TextField, DateTimeField, FloatField
+from peewee import IntegerField, TextField, DateTimeField, FloatField, ForeignKeyField
+from app.models.streams import Stream
 import datetime
 
 class Detection(BaseModel):
     id = IntegerField(primary_key=True)
     timestamp = DateTimeField(default=datetime.datetime.now)
-    stream_id = IntegerField()
-    streamname = TextField()
+    stream = ForeignKeyField(Stream, backref='detections')
     scientific_name = TextField()
     common_name = TextField()
     confidence = FloatField()

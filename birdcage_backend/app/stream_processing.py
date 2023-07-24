@@ -9,7 +9,7 @@ from pathlib import Path
 import ffmpeg
 import uuid
 from app.models.preferences import UserPreferences
-from app.models.detections import Detection
+from app.models.detections import Detection, Stream
 from app.models.commands import Command
 from config import TEMP_DIR_NAME, DETECTION_DIR_NAME, REDIS_SERVER, REDIS_PORT
 import json
@@ -120,16 +120,11 @@ def record_stream(self, stream, preferences):
 
     # Extract properties from the stream object
     stream_id = stream['id']
-    name = stream['name']
-    address = stream['address']
-    protocol = stream['protocol']
-    transport = stream['transport'] if 'transport' in stream else None
-    seconds = preferences['recordinglength']
 
     # initialize success/fail counters
     consecutive_successes = 0
     consecutive_fails = 0
-    redis_client.hset(task_id, 'task_name', 'record_stream_' + name)
+    redis_client.hset(task_id, 'task_name', 'record_stream_' + stream.name)
 
     while True:
 
@@ -137,31 +132,30 @@ def record_stream(self, stream, preferences):
             # check for revocation
             task_status = AsyncResult(task_id).status
             if task_status == 'REVOKED':
-                print("record_stream for " + name + " has been revoked", flush=True)
+                print("record_stream for " + stream.name + " has been revoked", flush=True)
                 break
 
             # check for sigterm
             if sigterm_received[0]:
-                print("record_stream for " + name + " got a sigterm", flush=True)
+                print("record_stream for " + stream.name + " got a sigterm", flush=True)
                 break
 
             # check for signal to stop
             should_stop = redis_client.hget('task_state', f'{task_id}_stop')
             if should_stop and should_stop.decode() == 'True':
-                print("record_stream for " + name + " got signal to stop", flush=True)
+                print("record_stream for " + stream.name + " got signal to stop", flush=True)
                 break
 
             # Generate a unique temporary filename
             tmp_filename = TEMP_DIR + f'/{uuid.uuid4().hex}.wav'
 
             # Record the stream for 15 seconds and save it to the output file
-            result = record_stream_ffmpeg(address, protocol, transport, seconds, tmp_filename)
+            result = record_stream_ffmpeg(stream.address, stream.protocol, stream.transport, stream.seconds, tmp_filename)
 
             if result['status'] == 'success':
                 # The recording was successful
                 print(f"Recording successful. File saved to: {result['filepath']} Now setting metadata", flush=True)
-                RecordingMetadata.create(filename=os.path.basename(tmp_filename), stream_id=stream_id,
-                                         streamname=name)
+                RecordingMetadata.create(filename=os.path.basename(tmp_filename), stream=stream)
                 print(f"Metadata set for: {result['filepath']}", flush=True)
 
             else:
@@ -177,7 +171,7 @@ def record_stream(self, stream, preferences):
             time.sleep(1)
 
         except Exception as e:
-            print(f"An exception occurred in record_stream for {name}: {e}")
+            print(f"An exception occurred in record_stream for {stream.name}: {e}")
             consecutive_successes = 0
             consecutive_fails += 1
 

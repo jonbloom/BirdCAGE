@@ -1,19 +1,20 @@
 from flask import Blueprint, request, jsonify
 from app.models.streams import Stream
 from app.decorators import admin_required
+from playhouse.shortcuts import model_to_dict
 
 streams_blueprint = Blueprint('streams', __name__)
 
 
 def get_streams_list():
-    streams = Stream.select().dicts()
-    return list(streams.execute())
+    streams = Stream.select()
+    return streams
 
 
 @streams_blueprint.route('/api/streams', methods=['GET'])
 def get_streams():
     streams = get_streams_list()
-    return jsonify(streams)
+    return jsonify([model_to_dict(s) for s in streams])
 
 
 @streams_blueprint.route('/api/streams', methods=['POST'])
