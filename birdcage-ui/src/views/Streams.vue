@@ -16,7 +16,8 @@ const fields = [
   "name",
   "protocol",
   "address",
-  "transport"
+  "transport",
+  "actions"
 ];
 
 onMounted(() => {
