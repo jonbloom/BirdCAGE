@@ -1,3 +1,5 @@
 db
 detections
 __pycache__
+.DS_Store
+birdcage-ui/.git.bak

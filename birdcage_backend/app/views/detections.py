@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, abort
 import sqlite3
 from config import DATABASE_FILE
 from app.models.detections import Detection
+from playhouse.shortcuts import model_to_dict
 
 detections_blueprint = Blueprint('detections', __name__)
 
@@ -26,6 +27,11 @@ def get_recent_detections(limit):
     list_of_detections = [list(detection) for detection in detections]
     return jsonify(list_of_detections)
 
+
+@detections_blueprint.route('/api/v2/detections/recent/<int:limit>', methods=['GET'])
+def get_recent_detections_v2(limit):
+    detections = Detection.select().order_by(Detection.timestamp.desc()).limit(limit)
+    return jsonify([model_to_dict(detection) for detection in detections])
 
 # Get all of the detections for a given date
 @detections_blueprint.route('/api/detections/date/<string:date>', methods=['GET'])
